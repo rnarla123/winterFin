@@ -1,5 +1,6 @@
 #dash libraries
 import dash
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
@@ -19,23 +20,63 @@ from plotly.offline import download_plotlyjs, init_notebook_mode, plot
 
 from stock import get_stock
 
-app = dash.Dash()
 
-app.layout = html.Div(children=[
-    html.Div(children='''
-        Symbol to graph:
-    '''),
-    dcc.Input(id='input', value='', type='text'),
-    html.Div(id='output-graph'),
-])
+form = dbc.Form(
+    [
+        dbc.FormGroup(
+            [
+                dbc.Label("Enter Stock", className="mr-2"),
+                dbc.Input(id='input', value='', type='text', placeholder="Name"),
+            ],
+            className="mr-3",
+        ),
+        html.P("Click:"),
+        html.Br(),
+        dbc.Button("Graph", color="primary", block=True, id="graph-button"),
+        dbc.Button("Perform Analysis", color="primary", block=True),
+    ],
+    inline=True,
+)
+
+
+first_card = dbc.Card(
+    dbc.CardBody(
+        [
+            dbc.CardHeader("Stocks Analysis"),
+            html.Br(),
+            form,
+        ]
+    ),
+    style={'height':'100vh'}
+)
+
+
+second_card = dbc.Card(
+    dbc.CardBody(
+        [
+            html.Div(id='output-graph'),
+        ]
+    ),
+    style={'height':'100vh'}
+)
+
+
+cards = dbc.CardGroup([dbc.Col(first_card, width=3), dbc.Col(second_card, width=9)])
+
+
+app = dash.Dash(external_stylesheets=[dbc.themes.DARKLY])
+app.layout = html.Div(cards)
 
 
 @app.callback(
     Output(component_id='output-graph', component_property='children'),
-    [Input(component_id='input', component_property='value')]
+    [
+        Input(component_id='input', component_property='value'), 
+        Input(component_id="graph-button", component_property="n_clicks")
+    ]
 )
-def update_value(input_data):
-    if input_data:
+def update_value(input_data, n):
+    if input_data and n:
         stock = get_stock(input_data, '10y')
 
         return dcc.Graph(
