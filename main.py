@@ -3,7 +3,7 @@ import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 
 #yahoo finance
@@ -29,11 +29,11 @@ form = dbc.Form(
                 dbc.Input(id='input', value='', type='text', placeholder="Name"),
             ],
             className="mr-3",
+            style={'padding-bottom':'2vh'}
         ),
-        html.P("Click:"),
         html.Br(),
         dbc.Button("Graph", color="primary", block=True, id="graph-button"),
-        dbc.Button("Perform Analysis", color="primary", block=True),
+        dbc.Button("Perform Prediction", color="primary", id="predict-button", block=True),
     ],
     inline=True,
 )
@@ -54,6 +54,7 @@ first_card = dbc.Card(
 second_card = dbc.Card(
     dbc.CardBody(
         [
+            dbc.CardHeader("Graphs"),
             html.Div(id='output-graph'),
         ]
     ),
@@ -71,19 +72,20 @@ app.layout = html.Div(cards)
 @app.callback(
     Output(component_id='output-graph', component_property='children'),
     [
-        Input(component_id='input', component_property='value'), 
         Input(component_id="graph-button", component_property="n_clicks")
+    ],
+    state=[
+        State(component_id='input', component_property='value'),
     ]
 )
-def update_value(input_data, n):
-    if input_data and n:
-        stock = get_stock(input_data, '10y')
+def update_value(n_clicks, input_value):
+    if input_value and n_clicks:
+        stock = get_stock(input_value, '10y')
 
         return dcc.Graph(
             id='example-graph',
             figure=stock[1]
         )
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
